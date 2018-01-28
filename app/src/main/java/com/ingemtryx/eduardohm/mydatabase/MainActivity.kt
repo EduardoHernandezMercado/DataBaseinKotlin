@@ -1,5 +1,6 @@
 package com.ingemtryx.eduardohm.mydatabase
 
+import android.content.ContentValues
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
@@ -8,10 +9,15 @@ import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.ingemtryx.eduardohm.mydatabase.DataBase.FeedReaderContract.FeedEntry
+import com.ingemtryx.eduardohm.mydatabase.DataBase.FeedReaderDbHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
+import kotlinx.android.synthetic.main.content_main.*
+
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +35,64 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
+        val mDbHelper = FeedReaderDbHelper(this)
+
+        buttonCT.setOnClickListener {
+            CreateTable(mDbHelper)
+        }
+        buttonSD.setOnClickListener {
+            textViewSD.setText(ShowData(mDbHelper))
+        }
+
+    }
+
+    fun CreateTable(mDbHelper: FeedReaderDbHelper) {
+
+        val db = mDbHelper.writableDatabase
+        val values = ContentValues()
+        values.put(FeedEntry.COLUMN_NAME_TITLE, "My")
+        values.put(FeedEntry.COLUMN_NAME_SUBTITLE, "Sub")
+        values.put(FeedEntry._ID, "2")
+
+        val newRowId = db.insert(FeedEntry.TABLE_NAME, null, values)
+
+    }
+
+    fun ShowData(mDbHelper: FeedReaderDbHelper): String {
+        val db = mDbHelper.getReadableDatabase()
+
+// Define a projection that specifies which columns from the database
+// you will actually use after this query.
+        val projection = arrayOf(FeedEntry._ID, FeedEntry.COLUMN_NAME_TITLE, FeedEntry.COLUMN_NAME_SUBTITLE)
+
+// Filter results WHERE "title" = 'My Title'
+        val selection = FeedEntry.COLUMN_NAME_TITLE + " = ?"
+        val selectionArgs = arrayOf("My")
+
+// How you want the results sorted in the resulting Cursor
+        val sortOrder = FeedEntry.COLUMN_NAME_SUBTITLE + " DESC"
+
+        val c = db.query(
+                FeedEntry.TABLE_NAME, // The table to query
+                projection, // The columns to return
+                selection, // The columns for the WHERE clause
+                selectionArgs, // don't group the rows
+                null, null, // don't filter by row groups
+                sortOrder                                 // The sort order
+        )// The values for the WHERE clause
+
+        val Todo = "Null";
+        while (c.moveToNext()) {
+            val itemId = c.getLong(c.getColumnIndexOrThrow(FeedEntry._ID))
+            val name = c.getString(c.getColumnIndexOrThrow(FeedEntry.COLUMN_NAME_TITLE))
+            val title = c.getString(c.getColumnIndexOrThrow(FeedEntry.COLUMN_NAME_SUBTITLE))
+            Todo.contains("Data :" + itemId.toString() + " , " + name + title)
+            Todo.contains(",")
+        }
+
+        return Todo
+
+
     }
 
     override fun onBackPressed() {
